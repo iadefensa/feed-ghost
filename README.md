@@ -1,13 +1,13 @@
-# Feed Ghost
+# IA Defensa Feed Ghost
 
-A two-part feed tool for browsing and archiving RSS/Atom feeds anonymously via the [Internet Archive](https://web.archive.org/).
+A two-part feed tool for browsing and archiving RSS/Atom feeds anonymously via the [Internet Archive](https://web.archive.org/)—useful to avoid subscribing to services that may excessively track you or otherwise not match your values.
 
-* **Part 1—Interactive viewer:** A hosted web page where you enter any feed URL and browse its entries, with each item linked to `web.archive.org` instead of the original site.
-* **Part 2—Automated feed archive:** Fork this repo, configure a list of feeds, and a weekly GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your GitHub Pages site.
+* **Part 1—[Interactive feed viewer](@@):** A tool where you enter any feed URL and browse its entries, with each item linked to `web.archive.org` instead of the original site.
+* **Part 2—Automated feed anonymization service:** Fork this repo, configure a list of feeds, and a weekly GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your own GitHub Pages site so that you can follow the URLs in your feed reader.
 
-## Part 1—Using the hosted viewer
+## Part 1: Using the Interactive Feed Viewer
 
-Visit the Feed Ghost page and paste any RSS or Atom feed URL into the input field. The tool will:
+Visit [Feed Ghost](@@) and paste any RSS or Atom feed URL into the input field. The tool will:
 
 1. Fetch the feed (with a CORS proxy fallback if needed)
 2. Display all entries with their titles and dates
@@ -16,11 +16,11 @@ Visit the Feed Ghost page and paste any RSS or Atom feed URL into the input fiel
 
 No data is stored or transmitted beyond what’s necessary to fetch and display the feed.
 
-## Part 2—Setting up your own automated feed archive
+## Part 2: Setting Up Your Own Automated Feed Anonymization Service
 
 This requires a GitHub account and takes about five minutes.
 
-### 1. Fork this repository
+### 1. Fork This Repository
 
 Click **Fork** on the GitHub repository page. All subsequent steps happen in your fork.
 
@@ -63,7 +63,7 @@ The `schedule` field in `config.json` is for reference only. The actual schedule
 
 Your site will be available at `https://[your-username].github.io/feed-ghost/`.
 
-### 4. Run the Action for the first time
+### 4. Run the Action for the First Time
 
 The Action runs automatically each week, but you can trigger it immediately:
 
@@ -72,7 +72,7 @@ The Action runs automatically each week, but you can trigger it immediately:
 
 The Action will fetch your configured feeds, rewrite their item links, and commit the results to `feeds/` in your repository. GitHub Pages will then redeploy automatically.
 
-### 5. Finding your feeds
+### 5. Finding Your Feeds
 
 After the Action runs:
 
