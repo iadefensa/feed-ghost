@@ -1,0 +1,77 @@
+h1,
+h2,
+h3,
+h4,
+a,
+strong {
+	color: #fff;
+	font-weight: 400;
+}
+
+label,
+input,
+button {
+	cursor: pointer;
+}
+
+a {
+	text-decoration: underline;
+	text-decoration-color: #aaa;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+a:focus,
+a:hover,
+a:active {
+	text-decoration: none;
+}
+
+/* Buttons */
+
+.btn-primary {
+	background-color: #ceff1a;
+	color: #000;
+}
+
+.btn-primary:is(:focus, :hover, :active) {
+	background-color: hsl(from #ceff1a h s calc(l - 7));
+}
+
+.btn-secondary {
+	background-color: #333;
+	color: #fff;
+}
+
+.btn-secondary:is(:focus, :hover, :active) {
+	background-color: hsl(from #111 h s calc(l + 11));
+}
+
+/* Status */
+
+.status.enabled,
+.status.active {
+	background: #064e3b;
+	color: #6ee7b7;
+}
+
+.status.disabled,
+.status.pending {
+	background: #78350f;
+	color: #fde68a;
+}
+
+.status.error {
+	background: #7f1d1d;
+	color: #fca5a5;
+}
+
+@media print {
+
+	* {
+		border-width: 0 !important;
+		box-shadow: none !important;
+		color: #000 !important;
+	}
+
+}
