@@ -20,13 +20,15 @@ No data is stored or transmitted beyond what’s necessary to fetch and display 
 
 This requires a GitHub account and takes about five minutes.
 
+**Privacy note:** GitHub Pages is free only for public repositories. If your fork is public—which is required for free GitHub Pages—your `config.json` and the list of feeds you follow will be publicly visible. Keep this in mind before adding feeds you'd prefer not to disclose.
+
 ### 1. Fork This Repository
 
 Click **Fork** on the GitHub repository page. All subsequent steps happen in your fork.
 
-### 2. Edit `config.json`
+### 2. Create and Edit `config.json`
 
-Open `config.json` in your fork and replace the example entry with your feeds:
+Copy `config.example.json` to `config.json` and replace the example entry with your feeds:
 
 ```json
 {

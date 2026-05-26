@@ -186,6 +186,10 @@ def main():
     config_path = os.path.join(repo_root, 'config.json')
     feeds_dir = os.path.join(repo_root, 'feeds')
 
+    if not os.path.exists(config_path):
+        print('Error: config.json not found. Copy config.example.json to config.json and edit it.', file=sys.stderr)
+        sys.exit(1)
+
     with open(config_path, encoding='utf-8') as f:
         config = json.load(f)
 
