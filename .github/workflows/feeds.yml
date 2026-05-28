@@ -1,10 +1,9 @@
-name: Update archived feeds
+name: "Update anonymized feeds"
 
 on:
   schedule:
-    # Weekly on Mondays at 09:00 UTC.
-    # To change this, edit the cron expression below.
-    # Reference: https://crontab.guru/
+    # Weekly on Mondays at 09:00 UTC
+    # Reference for changes: https://crontab.guru/
     - cron: '0 9 * * 1'
   workflow_dispatch:
 
@@ -16,15 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Generate feeds
+      - name: "Generate feeds"
         run: python scripts/generate-feeds.py
-
-      - name: Commit changes
+      - name: "Commit changes"
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -32,6 +28,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update archived feeds [$(date -u '+%Y-%m-%d')]"
+            git commit -m "Update anonymized feeds [$(date -u '+%Y-%m-%d')]"
             git push
           fi

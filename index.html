@@ -23,7 +23,7 @@
 				outline: none;
 			}
 
-			#status {
+			.status {
 				border-radius: .375rem;
 				display: none;
 				font-size: .875rem;
@@ -31,13 +31,13 @@
 				padding: .75rem 1rem;
 			}
 
-			#status.loading {
+			.status.loading {
 				background: #1e3a5f;
 				color: #93c5fd;
 				display: block;
 			}
 
-			#status.error {
+			.status.error {
 				display: block;
 			}
 
@@ -80,13 +80,14 @@
 				<input type="url" id="feed-url" placeholder="https://example.com/feed.xml" autocomplete="off" spellcheck="false" required>
 				<button type="submit" class="btn-primary">View feed</button>
 			</form>
-			<div id="status" role="status"></div>
+			<div id="status" role="status" class="status"></div>
 			<section id="results" style="display: none;">
 				<div class="border border-[#333] p-6 rounded-md">
 					<h2 id="feed-title" class="font-semibold mb-4 pb-2 text-xl"></h2>
 					<ul id="entries" class="list-none m-0 p-0"></ul>
 				</div>
 			</section>
+			<p class="mt-5">A defense tool by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>. (<a href="https://github.com/iadefensa/feed-ghost/issues/new" target="_blank">Found an issue?</a>)</p>
 		</div>
 		<script>
 			const ARCHIVE_WEB = 'https://web.archive.org/web/';
@@ -102,7 +103,7 @@
 
 			function setStatus(msg, type) {
 				statusEl.textContent = msg;
-				statusEl.className = type || '';
+				statusEl.className = 'status' + (type ? ' ' + type : '');
 				statusEl.style.display = msg ? '' : 'none';
 			}
 

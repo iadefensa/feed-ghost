@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Feed Ghost—archived feed generator.
+IA Defensa Feed Ghost Automated Feed Anonymization Service.
 Reads config.json, fetches each configured feed, rewrites item links to
 web.archive.org, and writes output feed files to feeds/.
 """
@@ -8,6 +8,7 @@ web.archive.org, and writes output feed files to feeds/.
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.request
 import urllib.error
@@ -28,6 +29,22 @@ ET.register_namespace('content', NS_CONTENT)
 ET.register_namespace('dc', NS_DC)
 ET.register_namespace('media', NS_MEDIA)
 ET.register_namespace('sy', NS_SY)
+
+
+def get_config_edit_url(repo_root):
+    try:
+        remote = subprocess.check_output(
+            ['git', 'remote', 'get-url', 'origin'],
+            cwd=repo_root,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        match = re.search(r'github\.com[:/](.+?/[^/]+?)(?:\.git)?$', remote)
+        if match:
+            return f'https://github.com/{match.group(1)}/edit/main/config.json'
+    except Exception:
+        pass
+    return None
 
 
 def slugify(text):
@@ -125,7 +142,7 @@ def write_feed(root, path):
     tree.write(path, encoding='unicode', xml_declaration=True)
 
 
-def generate_index(feeds_info, out_path, now_str):
+def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
     if feeds_info:
         items_html = '\n'.join(
             f'\t\t\t\t\t<li class="entry">\n'
@@ -143,7 +160,7 @@ def generate_index(feeds_info, out_path, now_str):
 \t<head>
 \t\t<meta charset="utf-8">
 \t\t<meta name="viewport" content="width=device-width, initial-scale=1.0">
-\t\t<title>Archived Feeds · Feed Ghost</title>
+\t\t<title>Anonymized Feeds</title>
 \t\t<link rel="stylesheet" href="../setup/default.css">
 \t\t<link rel="stylesheet" href="../setup/basecoat.min.css">
 \t\t<script src="../setup/tailwind.min.js"></script>
@@ -166,11 +183,12 @@ def generate_index(feeds_info, out_path, now_str):
 \t</head>
 \t<body class="bg-zinc-900 p-8 pb-3">
 \t\t<div class="max-w-3xl mx-auto p-4 rounded-md shadow-sm">
-\t\t\t<h1 class="mb-2 text-2xl">Archived Feeds · Feed Ghost</h1>
-\t\t\t<p class="mb-8 text-sm">Copies of configured feeds with item links rewritten to <a href="https://web.archive.org/" target="_blank">web.archive.org</a>. Last updated: {now_str}.</p>
-\t\t\t<section class="border border-[#333] p-6 rounded-md">
+\t\t\t<h1 class="mb-2 text-2xl">Anonymized Feeds</h1>
+\t\t\t<p class="mb-8 text-sm">Copies of {'<a href="' + config_edit_url + '">configured feeds</a>' if config_edit_url else 'configured feeds'} with item links rewritten to <a href="https://web.archive.org/" target="_blank">the Internet Archive</a>. Last updated: {now_str}.</p>
+\t\t\t<section class="border border-[#333] mb-8 px-6 py-2 rounded-md">
 {list_html}
 \t\t\t</section>
+\t\t\t<p class="mt-5">This is a custom fork of <a href="https://github.com/iadefensa/feed-ghost/" target="_blank">a defense tool</a> by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>.</p>
 \t\t</div>
 \t</body>
 </html>'''
@@ -223,7 +241,8 @@ def main():
             print(f'  ERROR: {err}', file=sys.stderr)
             errors.append({'url': url, 'error': str(err)})
 
-    generate_index(feeds_info, os.path.join(feeds_dir, 'index.html'), now_str)
+    config_edit_url = get_config_edit_url(repo_root)
+    generate_index(feeds_info, os.path.join(feeds_dir, 'index.html'), now_str, config_edit_url)
     print(f'\nDone. {len(feeds_info)} feed(s) processed, {len(errors)} error(s).')
 
     if errors:

@@ -49,7 +49,7 @@ a:active {
 
 /* Status */
 
-.status.enabled,
+/* .status.enabled,
 .status.active {
 	background: #064e3b;
 	color: #6ee7b7;
@@ -59,11 +59,17 @@ a:active {
 .status.pending {
 	background: #78350f;
 	color: #fde68a;
-}
+} */
 
 .status.error {
 	background: #7f1d1d;
 	color: #fca5a5;
+}
+
+/* Hack */
+
+p.mt-5 {
+	font-size: 75%;
 }
 
 @media print {
