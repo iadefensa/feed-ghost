@@ -195,7 +195,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t\t\t\tfont-size: 75%;
 \t\t\t}}
 
-\t\t\tspan:first-child {{
+\t\t\tspan:not(span + span) {{
 \t\t\t\tmargin-left: 1rem;
 \t\t\t}}
 
