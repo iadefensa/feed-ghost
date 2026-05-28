@@ -169,10 +169,10 @@ def write_feed(root, path):
 def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
     if feeds_info:
         items_html = '\n'.join(
-            f'\t\t\t\t\t<li class="entry">\n'
+            f'\t\t\t\t\t<li class="entry">'
             f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
-            f'<span class="count">{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
-            + ('<span class="count">(delayed; based on latest Internet Archive snapshot)</span>' if info.get("via_archive") else '')
+            f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
+            + (' <span>· delayed (falling back to latest Internet Archive snapshot)</span>' if info.get("via_archive") else '')
             + '\n\t\t\t\t\t</li>'
             for info in feeds_info
         )
@@ -190,10 +190,13 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t\t<link rel="stylesheet" href="../setup/basecoat.min.css">
 \t\t<script src="../setup/tailwind.min.js"></script>
 \t\t<style>
-\t\t\t.count {{
+\t\t\tspan {{
 \t\t\t\tcolor: #9ca3af;
-\t\t\t\tfont-size: .75rem;
-\t\t\t\tmargin-left: .75rem;
+\t\t\t\tfont-size: 75%;
+\t\t\t}}
+
+\t\t\tspan:first-child {{
+\t\t\t\tmargin-left: 1rem;
 \t\t\t}}
 
 \t\t\t.entry {{
