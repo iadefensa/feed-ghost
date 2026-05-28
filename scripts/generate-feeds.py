@@ -216,7 +216,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t\t\t<section class="border border-[#333] mb-8 px-6 py-2 rounded-md">
 {list_html}
 \t\t\t</section>
-\t\t\t<p class="mt-5">This is a custom fork of <a href="https://github.com/iadefensa/feed-ghost/" target="_blank">a defense tool</a> by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>.</p>
+\t\t\t<p class="mt-5">This is a custom fork of <a href="https://github.com/iadefensa/feed-ghost/" target="_blank">a digital defense tool</a> by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>.</p>
 \t\t</div>
 \t</body>
 </html>'''
