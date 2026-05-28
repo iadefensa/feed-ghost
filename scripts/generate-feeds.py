@@ -66,7 +66,10 @@ class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
 def fetch(url):
     req = urllib.request.Request(
         url,
-        headers={'User-Agent': 'feed-ghost/1.0 (https://github.com/iadefensa/feed-ghost)'},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        },
     )
     opener = urllib.request.build_opener(_SafeRedirectHandler)
     with opener.open(req, timeout=30) as resp:
@@ -268,6 +271,8 @@ def main():
         print('\nErrors:')
         for err in errors:
             print(f'  {err["url"]}: {err["error"]}', file=sys.stderr)
+        if not feeds_info:
+            sys.exit(1)
 
 
 if __name__ == '__main__':
