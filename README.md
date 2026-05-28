@@ -1,6 +1,6 @@
 # IA Defensa Feed Ghost
 
-A double-purpose feed tool for browsing and archiving RSS/Atom feeds anonymously via the [Internet Archive](https://web.archive.org/)—useful to avoid subscribing to services that may excessively track you or otherwise not match your values.
+A dual-purpose feed anonymization tool for browsing and archiving RSS/Atom feeds via the [Internet Archive](https://web.archive.org/)—useful to avoid subscribing to services that may excessively track you or otherwise not match your values.
 
 1. [**Interactive feed viewer:**](https://iadefensa.github.io/feed-ghost/) A tool where you enter any feed URL and browse its entries, with each item linked to `web.archive.org` instead of the original site.
 2. **Automated feed anonymization service:** Fork this repo, configure one or more feeds to follow, and a weekly GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your own GitHub Pages site so that you can follow the URLs in your feed reader.
