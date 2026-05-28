@@ -8,19 +8,8 @@
 		<link rel="stylesheet" href="setup/basecoat.min.css">
 		<script src="setup/tailwind.min.js"></script>
 		<style>
-			#feed-url {
-				border: 1px solid #333;
-				border-radius: .375rem;
-				flex: 1;
-				font-size: 1rem;
-				min-width: 0;
-				padding: .5rem .75rem;
-			}
-
-			#feed-url:focus {
-				border-color: #3b82f6;
-				box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
-				outline: none;
+			a[href='./'] {
+				text-decoration: none;
 			}
 
 			.status {
@@ -70,6 +59,26 @@
 			.entry-save {
 				color: #9ca3af;
 			}
+
+			#results,
+			#controls {
+				display: none;
+			}
+
+			#feed-url {
+				border: 1px solid #333;
+				border-radius: .375rem;
+				flex: 1;
+				font-size: 1rem;
+				min-width: 0;
+				padding: .5rem .75rem;
+			}
+
+			#feed-url:focus {
+				border-color: #3b82f6;
+				box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
+				outline: none;
+			}
 		</style>
 	</head>
 	<body class="bg-zinc-900 p-8 pb-3">
@@ -81,12 +90,15 @@
 				<button type="submit" class="btn-primary">View feed</button>
 			</form>
 			<div id="status" role="status" class="status"></div>
-			<section id="results" style="display: none;">
+			<section id="results">
 				<div class="border border-[#333] p-6 pb-2 rounded-md">
 					<h2 id="feed-title" class="font-semibold mb-4 pb-2 text-xl"></h2>
 					<ul id="entries" class="list-none m-0 p-0"></ul>
 				</div>
 			</section>
+			<div id="controls" class="flex gap-4">
+				<a href="./" class="btn-secondary">Reset</a>
+			</div>
 			<p class="mt-5">A defense tool by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>. (<a href="https://github.com/iadefensa/feed-ghost/issues/new" target="_blank">Found an issue?</a>)</p>
 		</div>
 		<script>
@@ -100,6 +112,7 @@
 			const resultsEl = document.getElementById('results');
 			const feedTitleEl = document.getElementById('feed-title');
 			const entriesEl = document.getElementById('entries');
+			const resetEl = document.getElementById('controls');
 
 			function setStatus(msg, type) {
 				statusEl.textContent = msg;
@@ -169,6 +182,7 @@
 				if (!entries.length) {
 					entriesEl.innerHTML = '<li class="text-sm py-4">No entries found in this feed.</li>';
 					resultsEl.style.display = '';
+					resetEl.style.display = '';
 					return;
 				}
 
@@ -213,6 +227,7 @@
 				}
 
 				resultsEl.style.display = '';
+				resetEl.style.display = '';
 			}
 
 			form.addEventListener('submit', async event => {
@@ -220,7 +235,9 @@
 				const url = urlInput.value.trim();
 				if (!url) return;
 
+				history.replaceState(null, '', '?url=' + encodeURIComponent(url));
 				resultsEl.style.display = 'none';
+				resetEl.style.display = 'none';
 				setStatus('Loading feed…', 'loading');
 
 				try {
@@ -232,6 +249,12 @@
 					setStatus(`Error: ${err.message}`, 'error');
 				}
 			});
+
+			const initialUrl = new URLSearchParams(location.search).get('url');
+			if (initialUrl) {
+				urlInput.value = initialUrl;
+				form.requestSubmit();
+			}
 		</script>
 	</body>
 </html>
