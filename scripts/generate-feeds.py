@@ -232,7 +232,7 @@ def main():
     now_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
     feeds_info = []
     errors = []
-    seen_slugs = {}
+    used_slugs = set()
 
     for feed_cfg in feeds:
         url = feed_cfg.get('url', '').strip()
@@ -245,12 +245,12 @@ def main():
             xml_text = fetch(url)
             root, feed_title, count = process_feed(xml_text)
             display_name = name_hint or feed_title or urlparse(url).netloc or 'Feed'
-            slug = slugify(name_hint or feed_title or urlparse(url).netloc)
-            if slug in seen_slugs:
-                seen_slugs[slug] += 1
-                slug = f'{slug}-{seen_slugs[slug]}'
-            else:
-                seen_slugs[slug] = 1
+            base = slugify(name_hint or feed_title or urlparse(url).netloc)
+            slug, n = base, 1
+            while slug in used_slugs:
+                n += 1
+                slug = f'{base}-{n}'
+            used_slugs.add(slug)
             filename = f'{slug}.xml'
             out_path = os.path.join(feeds_dir, filename)
             write_feed(root, out_path)
