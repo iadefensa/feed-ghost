@@ -92,5 +92,5 @@ The feed files are valid RSS/Atom XML with item links rewritten to `https://web.
 
 * **Feed format support:** RSS 2.0 and Atom are supported. Older RSS 0.9x variants may work, but other formats (RSS 1.0, JSON Feed) are not.
 * **Archive availability:** Not all URLs may have an archived copy on `web.archive.org`. The “Save to archive” link and prefixed links will open whatever the Internet Archive has—or its “Save Page Now” interface if nothing is captured yet.
-* **CORS:** Most feed servers do not send CORS headers, so the viewer automatically retries via [corsproxy.io](https://corsproxy.io/) when a direct fetch fails. The proxy sees only the feed URL you enter.
+* **CORS:** Most feed servers do not send CORS headers, so the viewer automatically retries via [corsproxy.io](https://corsproxy.io/) when a direct fetch fails. When the proxy is used, your request—including your IP address and browser metadata—is sent to corsproxy.io along with the feed URL.
 * **Private feeds:** Feeds behind authentication are not supported.
