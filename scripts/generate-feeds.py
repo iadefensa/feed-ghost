@@ -14,6 +14,7 @@ import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from html import escape
 from urllib.parse import urlparse
 
 ARCHIVE_WEB = 'https://web.archive.org/web/'
@@ -74,7 +75,7 @@ def archive(url):
 
 
 def process_rss(root):
-    channel = root.find('channel')
+    channel = root if root.tag == 'channel' else root.find('channel')
     if channel is None:
         return None, 0
 
@@ -146,7 +147,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
     if feeds_info:
         items_html = '\n'.join(
             f'\t\t\t\t\t<li class="entry">\n'
-            f'\t\t\t\t\t\t<a href="{info["filename"]}">{info["title"]}</a>'
+            f'\t\t\t\t\t\t<a href="{escape(info["filename"])}">{escape(info["title"])}</a>'
             f'<span class="count">{info["count"]} item{"s" if info["count"] != 1 else ""}</span>\n'
             f'\t\t\t\t\t</li>'
             for info in feeds_info
@@ -184,7 +185,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t<body class="bg-zinc-900 p-8 pb-3">
 \t\t<div class="max-w-3xl mx-auto p-4">
 \t\t\t<h1 class="mb-2 text-2xl">Anonymized Feeds</h1>
-\t\t\t<p class="mb-8 text-sm">Copies of {'<a href="' + config_edit_url + '">configured feeds</a>' if config_edit_url else 'configured feeds'} with item links rewritten to <a href="https://web.archive.org/" target="_blank">the Internet Archive</a>. Last updated: {now_str}.</p>
+\t\t\t<p class="mb-8 text-sm">Copies of {'<a href="' + escape(config_edit_url) + '">configured feeds</a>' if config_edit_url else 'configured feeds'} with item links rewritten to <a href="https://web.archive.org/" target="_blank">the Internet Archive</a>. Last updated: {now_str}.</p>
 \t\t\t<section class="border border-[#333] mb-8 px-6 py-2 rounded-md">
 {list_html}
 \t\t\t</section>
@@ -205,8 +206,8 @@ def main():
     feeds_dir = os.path.join(repo_root, 'feeds')
 
     if not os.path.exists(config_path):
-        print('Error: config.json not found. Copy config.example.json to config.json and edit it.', file=sys.stderr)
-        sys.exit(1)
+        print('config.json not found; nothing to do. Copy config.example.json to config.json to configure feeds.', file=sys.stderr)
+        sys.exit(0)
 
     with open(config_path, encoding='utf-8') as f:
         config = json.load(f)
@@ -219,6 +220,7 @@ def main():
     now_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
     feeds_info = []
     errors = []
+    seen_slugs = {}
 
     for feed_cfg in feeds:
         url = feed_cfg.get('url', '').strip()
@@ -232,6 +234,11 @@ def main():
             root, feed_title, count = process_feed(xml_text)
             display_name = name_hint or feed_title or urlparse(url).netloc or 'Feed'
             slug = slugify(name_hint or feed_title or urlparse(url).netloc)
+            if slug in seen_slugs:
+                seen_slugs[slug] += 1
+                slug = f'{slug}-{seen_slugs[slug]}'
+            else:
+                seen_slugs[slug] = 1
             filename = f'{slug}.xml'
             out_path = os.path.join(feeds_dir, filename)
             write_feed(root, out_path)
@@ -248,8 +255,7 @@ def main():
     if errors:
         print('\nErrors:')
         for err in errors:
-            print(f'  {err["url"]}: {err["error"]}')
-        sys.exit(1)
+            print(f'  {err["url"]}: {err["error"]}', file=sys.stderr)
 
 
 if __name__ == '__main__':
