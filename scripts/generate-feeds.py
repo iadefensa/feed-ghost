@@ -13,6 +13,8 @@ import sys
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as safe_ET
+from defusedxml import DefusedXmlException
 from datetime import datetime, timezone
 from html import escape
 from urllib.parse import urlparse
@@ -54,12 +56,20 @@ def slugify(text):
     return slug or 'feed'
 
 
+class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if urlparse(newurl).scheme not in ('http', 'https'):
+            raise urllib.error.URLError(f'Redirect to disallowed scheme: {urlparse(newurl).scheme!r}')
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def fetch(url):
     req = urllib.request.Request(
         url,
         headers={'User-Agent': 'feed-ghost/1.0 (https://github.com/iadefensa/feed-ghost)'},
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    opener = urllib.request.build_opener(_SafeRedirectHandler)
+    with opener.open(req, timeout=30) as resp:
         raw = resp.read()
     try:
         return raw.decode('utf-8')
@@ -119,7 +129,9 @@ def process_atom(root):
 
 def process_feed(xml_text):
     try:
-        root = ET.fromstring(xml_text)
+        root = safe_ET.fromstring(xml_text)
+    except DefusedXmlException as err:
+        raise ValueError(f'Unsafe XML: {err}') from err
     except ET.ParseError as err:
         raise ValueError(f'Invalid XML: {err}') from err
 
