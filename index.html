@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>IA Defensa Feed Ghost</title>
+		<link rel="stylesheet" href="setup/default.css">
+		<link rel="stylesheet" href="setup/basecoat.min.css">
+		<script src="setup/tailwind.min.js"></script>
+		<style>
+			#feed-url {
+				border: 1px solid #333;
+				border-radius: .375rem;
+				flex: 1;
+				font-size: 1rem;
+				min-width: 0;
+				padding: .5rem .75rem;
+			}
+
+			#feed-url:focus {
+				border-color: #3b82f6;
+				box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
+				outline: none;
+			}
+
+			.status {
+				border-radius: .375rem;
+				display: none;
+				font-size: .875rem;
+				margin-bottom: 1.5rem;
+				padding: .75rem 1rem;
+			}
+
+			.status.loading {
+				background: #1e3a5f;
+				color: #93c5fd;
+				display: block;
+			}
+
+			.status.error {
+				display: block;
+			}
+
+			.entry {
+				border-bottom: 1px solid #333;
+				padding: .875rem 0;
+			}
+
+			.entry:last-child {
+				border-bottom: none;
+			}
+
+			.entry-title a {
+				font-size: 1rem;
+			}
+
+			.entry-meta {
+				align-items: center;
+				display: flex;
+				flex-wrap: wrap;
+				font-size: .8125rem;
+				gap: .75rem;
+				margin-top: .25rem;
+			}
+
+			.entry-date {
+				color: #9ca3af;
+			}
+
+			.entry-save {
+				color: #9ca3af;
+			}
+		</style>
+	</head>
+	<body class="bg-zinc-900 p-8 pb-3">
+		<div class="max-w-3xl mx-auto p-4">
+			<h1 class="mb-2 text-2xl">IA Defensa Feed Ghost</h1>
+			<p class="mb-8 text-sm">Enter a feed URL to browse its entries anonymously via the <a href="https://web.archive.org/" target="_blank">Internet Archive</a>.</p>
+			<form id="feed-form" class="flex gap-3 mb-8">
+				<input type="url" id="feed-url" aria-label="Feed URL" placeholder="https://example.com/feed.xml" autocomplete="off" spellcheck="false" required>
+				<button type="submit" class="btn-primary">View feed</button>
+			</form>
+			<div id="status" role="status" class="status"></div>
+			<section id="results" style="display: none;">
+				<div class="border border-[#333] p-6 rounded-md">
+					<h2 id="feed-title" class="font-semibold mb-4 pb-2 text-xl"></h2>
+					<ul id="entries" class="list-none m-0 p-0"></ul>
+				</div>
+			</section>
+			<p class="mt-5">A defense tool by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>. (<a href="https://github.com/iadefensa/feed-ghost/issues/new" target="_blank">Found an issue?</a>)</p>
+		</div>
+		<script>
+			const ARCHIVE_WEB = 'https://web.archive.org/web/';
+			const ARCHIVE_SAVE = 'https://web.archive.org/save/';
+			const CORS_PROXY = 'https://corsproxy.io/?url=';
+
+			const form = document.getElementById('feed-form');
+			const urlInput = document.getElementById('feed-url');
+			const statusEl = document.getElementById('status');
+			const resultsEl = document.getElementById('results');
+			const feedTitleEl = document.getElementById('feed-title');
+			const entriesEl = document.getElementById('entries');
+
+			function setStatus(msg, type) {
+				statusEl.textContent = msg;
+				statusEl.className = 'status' + (type ? ' ' + type : '');
+				statusEl.style.display = msg ? '' : 'none';
+			}
+
+			function formatDate(str) {
+				if (!str) return '';
+				const date = new Date(str);
+				if (Number.isNaN(date.getTime())) return str;
+				return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+			}
+
+			async function fetchFeed(url) {
+				try {
+					const resp = await fetch(url);
+					if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+					const text = await resp.text();
+					if (text.trim().startsWith('<')) return text;
+					throw new Error('Response does not look like XML');
+				} catch {
+					setStatus('Retrying via CORS proxy…', 'loading');
+					const resp = await fetch(CORS_PROXY + encodeURIComponent(url));
+					if (!resp.ok) throw new Error(`Proxy request failed (HTTP ${resp.status})`);
+					return await resp.text();
+				}
+			}
+
+			function parseFeed(xml) {
+				const doc = new DOMParser().parseFromString(xml, 'application/xml');
+				const err = doc.querySelector('parsererror');
+				if (err) throw new Error('Could not parse feed XML');
+
+				const root = doc.documentElement;
+				const isAtom = root.localName === 'feed';
+
+				let feedTitle, entries;
+
+				if (isAtom) {
+					feedTitle = root.querySelector(':scope > title')?.textContent?.trim();
+					entries = [...root.querySelectorAll('entry')].map(e => ({
+						title: e.querySelector('title')?.textContent?.trim() || '(no title)',
+						url: e.querySelector('link[rel="alternate"]')?.getAttribute('href')
+							|| e.querySelector('link:not([rel="self"]):not([rel="hub"])')?.getAttribute('href')
+							|| '',
+						date: e.querySelector('updated, published')?.textContent?.trim() || '',
+					}));
+				} else {
+					feedTitle = root.querySelector('channel > title')?.textContent?.trim();
+					entries = [...root.querySelectorAll('item')].map(e => ({
+						title: e.querySelector('title')?.textContent?.trim() || '(no title)',
+						url: e.querySelector('link')?.textContent?.trim()
+							|| e.querySelector('[rel="alternate"]')?.getAttribute('href')
+							|| '',
+						date: e.querySelector('pubDate')?.textContent?.trim() || '',
+					}));
+				}
+
+				return { feedTitle, entries };
+			}
+
+			function renderResults(feedTitle, entries) {
+				feedTitleEl.textContent = feedTitle || 'Feed';
+				entriesEl.innerHTML = '';
+
+				if (!entries.length) {
+					entriesEl.innerHTML = '<li class="text-sm py-4">No entries found in this feed.</li>';
+					resultsEl.style.display = '';
+					return;
+				}
+
+				for (const { title, url, date } of entries) {
+					const li = document.createElement('li');
+					li.className = 'entry';
+
+					const titleDiv = document.createElement('div');
+					titleDiv.className = 'entry-title';
+					if (url) {
+						const a = document.createElement('a');
+						a.href = ARCHIVE_WEB + url;
+						a.target = '_blank';
+						a.rel = 'noopener';
+						a.textContent = title;
+						titleDiv.appendChild(a);
+					} else {
+						titleDiv.textContent = title;
+					}
+					li.appendChild(titleDiv);
+
+					const metaDiv = document.createElement('div');
+					metaDiv.className = 'entry-meta';
+					if (date) {
+						const dateSpan = document.createElement('span');
+						dateSpan.className = 'entry-date';
+						dateSpan.textContent = formatDate(date);
+						metaDiv.appendChild(dateSpan);
+					}
+					if (url) {
+						const saveA = document.createElement('a');
+						saveA.href = ARCHIVE_SAVE + url;
+						saveA.target = '_blank';
+						saveA.rel = 'noopener';
+						saveA.className = 'entry-save';
+						saveA.textContent = 'Save to archive';
+						metaDiv.appendChild(saveA);
+					}
+					if (metaDiv.children.length) li.appendChild(metaDiv);
+
+					entriesEl.appendChild(li);
+				}
+
+				resultsEl.style.display = '';
+			}
+
+			form.addEventListener('submit', async event => {
+				event.preventDefault();
+				const url = urlInput.value.trim();
+				if (!url) return;
+
+				resultsEl.style.display = 'none';
+				setStatus('Loading feed…', 'loading');
+
+				try {
+					const xml = await fetchFeed(url);
+					const { feedTitle, entries } = parseFeed(xml);
+					setStatus('');
+					renderResults(feedTitle, entries);
+				} catch (err) {
+					setStatus(`Error: ${err.message}`, 'error');
+				}
+			});
+		</script>
+	</body>
+</html>
