@@ -196,7 +196,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t\t\t}}
 
 \t\t\tspan:not(span + span) {{
-\t\t\t\tmargin-left: 1rem;
+\t\t\t\tmargin-left: .75rem;
 \t\t\t}}
 
 \t\t\t.entry {{
