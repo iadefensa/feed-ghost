@@ -209,7 +209,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t\t\t}}
 \t\t</style>
 \t</head>
-\t<body class="bg-zinc-900 p-8 pb-3">
+\t<body class="bg-zinc-900 pb-3 pt-8 px-4">
 \t\t<div class="max-w-3xl mx-auto p-4">
 \t\t\t<h1 class="mb-2 text-2xl">Anonymized Feeds</h1>
 \t\t\t<p class="mb-8 text-sm">Copies of {'<a href="' + escape(config_edit_url) + '">configured feeds</a>' if config_edit_url else 'configured feeds'} with item links rewritten to <a href="https://web.archive.org/" target="_blank">the Internet Archive</a>. Last updated: {now_str}.</p>
