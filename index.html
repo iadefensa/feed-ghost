@@ -12,21 +12,6 @@
 				text-decoration: none;
 			}
 
-			#feed-url {
-				border: 1px solid #333;
-				border-radius: .375rem;
-				flex: 1;
-				font-size: 1rem;
-				min-width: 0;
-				padding: .5rem .75rem;
-			}
-
-			#feed-url:focus {
-				border-color: #3b82f6;
-				box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
-				outline: none;
-			}
-
 			.status {
 				border-radius: .375rem;
 				display: none;
@@ -74,6 +59,26 @@
 			.entry-save {
 				color: #9ca3af;
 			}
+
+			#results,
+			#controls {
+				display: none;
+			}
+
+			#feed-url {
+				border: 1px solid #333;
+				border-radius: .375rem;
+				flex: 1;
+				font-size: 1rem;
+				min-width: 0;
+				padding: .5rem .75rem;
+			}
+
+			#feed-url:focus {
+				border-color: #3b82f6;
+				box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
+				outline: none;
+			}
 		</style>
 	</head>
 	<body class="bg-zinc-900 p-8 pb-3">
@@ -91,7 +96,7 @@
 					<ul id="entries" class="list-none m-0 p-0"></ul>
 				</div>
 			</section>
-			<div id="reset-section" class="flex gap-4">
+			<div id="controls" class="flex gap-4">
 				<a href="./" class="btn-secondary">Reset</a>
 			</div>
 			<p class="mt-5">A defense tool by <a href="https://iadefensa.com/" target="_blank">IA Defensa</a>. (<a href="https://github.com/iadefensa/feed-ghost/issues/new" target="_blank">Found an issue?</a>)</p>
@@ -107,7 +112,7 @@
 			const resultsEl = document.getElementById('results');
 			const feedTitleEl = document.getElementById('feed-title');
 			const entriesEl = document.getElementById('entries');
-			const resetEl = document.getElementById('reset-section');
+			const resetEl = document.getElementById('controls');
 
 			function setStatus(msg, type) {
 				statusEl.textContent = msg;
