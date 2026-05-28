@@ -170,7 +170,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
     if feeds_info:
         items_html = '\n'.join(
             f'\t\t\t\t\t<li class="entry">\n'
-            f'\t\t\t\t\t\t<a href="{escape(info["filename"])}">{escape(info["title"])}</a>'
+            f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
             f'<span class="count">{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
             + ('<span class="count">(delayed; based on latest Internet Archive snapshot)</span>' if info.get("via_archive") else '')
             + '\n\t\t\t\t\t</li>'
