@@ -77,7 +77,7 @@
 			<h1 class="mb-2 text-2xl">IA Defensa Feed Ghost</h1>
 			<p class="mb-8 text-sm">Enter a feed URL to browse its entries anonymously via the <a href="https://web.archive.org/" target="_blank">Internet Archive</a>.</p>
 			<form id="feed-form" class="flex gap-3 mb-8">
-				<input type="url" id="feed-url" placeholder="https://example.com/feed.xml" autocomplete="off" spellcheck="false" required>
+				<input type="url" id="feed-url" aria-label="Feed URL" placeholder="https://example.com/feed.xml" autocomplete="off" spellcheck="false" required>
 				<button type="submit" class="btn-primary">View feed</button>
 			</form>
 			<div id="status" role="status" class="status"></div>
@@ -109,11 +109,9 @@
 
 			function formatDate(str) {
 				if (!str) return '';
-				try {
-					return new Date(str).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-				} catch {
-					return str;
-				}
+				const date = new Date(str);
+				if (Number.isNaN(date.getTime())) return str;
+				return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 			}
 
 			async function fetchFeed(url) {
