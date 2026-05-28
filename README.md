@@ -68,7 +68,7 @@ The `schedule` field in your `config.json` is for reference only. The actual sch
 3. Choose branch: `main`, folder: `/ (root)`.
 4. Click **Save**.
 
-Your site will be available at `https://[your-username].github.io/feed-ghost/`.
+Your feeds will be available at `https://[your-username].github.io/feed-ghost/feeds/`.
 
 ### d. Run the Action for the First Time
 
