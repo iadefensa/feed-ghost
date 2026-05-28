@@ -196,7 +196,6 @@
 						const a = document.createElement('a');
 						a.href = ARCHIVE_WEB + url;
 						a.target = '_blank';
-						a.rel = 'noopener';
 						a.textContent = title;
 						titleDiv.appendChild(a);
 					} else {
@@ -216,9 +215,8 @@
 						const saveA = document.createElement('a');
 						saveA.href = ARCHIVE_SAVE + url;
 						saveA.target = '_blank';
-						saveA.rel = 'noopener';
 						saveA.className = 'entry-save';
-						saveA.textContent = 'Save to archive';
+						saveA.textContent = 'Save new snapshot to Internet Archive';
 						metaDiv.appendChild(saveA);
 					}
 					if (metaDiv.children.length) li.appendChild(metaDiv);
