@@ -63,7 +63,7 @@ class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def fetch(url):
+def fetch(url, *, _archive_fallback=True):
     req = urllib.request.Request(
         url,
         headers={
@@ -72,12 +72,20 @@ def fetch(url):
         },
     )
     opener = urllib.request.build_opener(_SafeRedirectHandler)
-    with opener.open(req, timeout=30) as resp:
-        raw = resp.read()
     try:
-        return raw.decode('utf-8')
+        with opener.open(req, timeout=30) as resp:
+            raw = resp.read()
+    except urllib.error.HTTPError as err:
+        if _archive_fallback and err.code in (403, 429):
+            print(f'  Direct fetch blocked (HTTP {err.code}); trying Internet Archive fallback…')
+            text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
+            return text, True
+        raise
+    try:
+        text = raw.decode('utf-8')
     except UnicodeDecodeError:
-        return raw.decode('latin-1', errors='replace')
+        text = raw.decode('latin-1', errors='replace')
+    return text, False
 
 
 def archive(url):
@@ -163,8 +171,9 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
         items_html = '\n'.join(
             f'\t\t\t\t\t<li class="entry">\n'
             f'\t\t\t\t\t\t<a href="{escape(info["filename"])}">{escape(info["title"])}</a>'
-            f'<span class="count">{info["count"]} item{"s" if info["count"] != 1 else ""}</span>\n'
-            f'\t\t\t\t\t</li>'
+            f'<span class="count">{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
+            + ('<span class="count">(delayed; based on latest Internet Archive snapshot)</span>' if info.get("via_archive") else '')
+            + '\n\t\t\t\t\t</li>'
             for info in feeds_info
         )
         list_html = f'\t\t\t\t<ul class="list-none m-0 p-0">\n{items_html}\n\t\t\t\t</ul>'
@@ -245,7 +254,7 @@ def main():
         print(f'Processing: {url}')
 
         try:
-            xml_text = fetch(url)
+            xml_text, via_archive = fetch(url)
             root, feed_title, count = process_feed(xml_text)
             display_name = name_hint or feed_title or urlparse(url).netloc or 'Feed'
             base = slugify(name_hint or feed_title or urlparse(url).netloc)
@@ -257,7 +266,7 @@ def main():
             filename = f'{slug}.xml'
             out_path = os.path.join(feeds_dir, filename)
             write_feed(root, out_path)
-            feeds_info.append({'title': display_name, 'filename': filename, 'count': count})
+            feeds_info.append({'title': display_name, 'filename': filename, 'count': count, 'via_archive': via_archive})
             print(f'  → feeds/{filename} ({count} item{"s" if count != 1 else ""})')
         except Exception as err:
             print(f'  ERROR: {err}', file=sys.stderr)
