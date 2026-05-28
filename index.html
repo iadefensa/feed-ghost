@@ -178,11 +178,11 @@
 			function renderResults(feedTitle, entries) {
 				feedTitleEl.textContent = feedTitle || 'Feed';
 				entriesEl.innerHTML = '';
+				resultsEl.style.display = 'block';
+				resetEl.style.display = 'flex';
 
 				if (!entries.length) {
 					entriesEl.innerHTML = '<li class="text-sm py-4">No entries found in this feed.</li>';
-					resultsEl.style.display = '';
-					resetEl.style.display = '';
 					return;
 				}
 
@@ -226,8 +226,6 @@
 					entriesEl.appendChild(li);
 				}
 
-				resultsEl.style.display = '';
-				resetEl.style.display = '';
 			}
 
 			form.addEventListener('submit', async event => {
