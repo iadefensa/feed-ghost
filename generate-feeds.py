@@ -216,7 +216,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t<head>
 \t\t<meta charset="utf-8">
 \t\t<meta name="viewport" content="width=device-width, initial-scale=1.0">
-\t\t<title>Anonymized Feeds</title>
+\t\t<title>“Anonymized” Feeds</title>
 \t\t<link rel="stylesheet" href="../setup/default.css">
 \t\t<link rel="stylesheet" href="../setup/basecoat.min.css">
 \t\t<script src="../setup/tailwind.min.js"></script>
@@ -242,7 +242,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t</head>
 \t<body class="bg-zinc-900 pb-3 pt-8 px-4">
 \t\t<div class="max-w-3xl mx-auto p-4">
-\t\t\t<h1 class="mb-2 text-2xl">Anonymized Feeds</h1>
+\t\t\t<h1 class="mb-2 text-2xl">“Anonymized” Feeds</h1>
 \t\t\t<p class="mb-8 text-sm">Copies of {'<a href="' + escape(config_edit_url) + '">configured feeds</a>' if config_edit_url else 'configured feeds'} with item links rewritten to <a href="https://web.archive.org/" target="_blank">the Internet Archive</a>. Last updated: {now_str}.</p>
 \t\t\t<section class="border border-[#333] mb-8 px-6 py-2 rounded-md">
 {list_html}

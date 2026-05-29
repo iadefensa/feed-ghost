@@ -85,8 +85,8 @@ The Action will fetch your configured feeds, rewrite their item links, and commi
 
 After the Action runs:
 
-* `https://[your-username].github.io/feed-ghost/feeds/`—index of all anonymized feeds
-* `https://[your-username].github.io/feed-ghost/feeds/[slug].xml`—individual anonymized feed files, where `[slug]` is derived from the feed’s `name` or title
+* `https://[your-username].github.io/feed-ghost/feeds/`—index of all feeds
+* `https://[your-username].github.io/feed-ghost/feeds/[slug].xml`—individual feeds, where `[slug]` is derived from the feed’s `name` or title
 
 The feed files are valid RSS/Atom XML with item links rewritten to `https://web.archive.org/web/[original URL]`. You can subscribe to the feeds in any feed reader.
 
