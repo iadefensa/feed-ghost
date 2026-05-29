@@ -31,5 +31,6 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Update anonymized feeds [$(date -u '+%Y-%m-%d')]"
+            git pull --rebase
             git push
           fi
