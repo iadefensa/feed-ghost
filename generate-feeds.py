@@ -317,7 +317,10 @@ def main():
         log_lines.append('Errors:')
         for err in errors:
             parsed = urlparse(err['url'])
-            safe_netloc = parsed.hostname or ''
+            hostname = parsed.hostname or ''
+            if ':' in hostname:
+                hostname = f'[{hostname}]'
+            safe_netloc = hostname
             if parsed.port:
                 safe_netloc += f':{parsed.port}'
             safe_url = parsed._replace(netloc=safe_netloc, query='', fragment='').geturl()
