@@ -20,6 +20,7 @@ from html import escape
 from urllib.parse import urlparse
 
 ARCHIVE_WEB = 'https://web.archive.org/web/'
+ARCHIVE_SAVE = 'https://web.archive.org/save/'
 
 NS_ATOM = 'http://www.w3.org/2005/Atom'
 NS_CONTENT = 'http://purl.org/rss/1.0/modules/content/'
@@ -63,6 +64,20 @@ class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def trigger_save(url):
+    """Request a new Internet Archive snapshot of url (fire-and-forget)."""
+    req = urllib.request.Request(
+        f'{ARCHIVE_SAVE}{url}',
+        headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15):
+            pass
+        print(f'  Triggered Internet Archive re-archive for {url}')
+    except Exception as save_err:
+        print(f'  Could not trigger Internet Archive save: {save_err}')
+
+
 def fetch(url, *, _archive_fallback=True):
     req = urllib.request.Request(
         url,
@@ -78,6 +93,14 @@ def fetch(url, *, _archive_fallback=True):
     except urllib.error.HTTPError as err:
         if _archive_fallback and err.code in (403, 429):
             print(f'  Direct fetch blocked (HTTP {err.code}); trying Internet Archive fallback…')
+            trigger_save(url)
+            text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
+            return text, True
+        raise
+    except urllib.error.URLError as err:
+        if _archive_fallback:
+            print(f'  Direct fetch failed ({err.reason}); trying Internet Archive fallback…')
+            trigger_save(url)
             text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
             return text, True
         raise
@@ -227,8 +250,7 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 
 
 def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    repo_root = os.path.dirname(script_dir)
+    repo_root = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(repo_root, 'config.json')
     feeds_dir = os.path.join(repo_root, 'feeds')
 

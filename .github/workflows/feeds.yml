@@ -21,7 +21,7 @@ jobs:
       - name: "Install dependencies"
         run: pip install -r requirements.txt
       - name: "Generate feeds"
-        run: python scripts/generate-feeds.py
+        run: python generate-feeds.py
       - name: "Commit changes"
         run: |
           git config user.name "github-actions[bot]"
