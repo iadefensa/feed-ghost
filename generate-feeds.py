@@ -309,6 +309,17 @@ def main():
     generate_index(feeds_info, os.path.join(feeds_dir, 'index.html'), now_str, config_edit_url)
     print(f'\nDone. {len(feeds_info)} feed(s) processed, {len(errors)} error(s).')
 
+    log_lines = [f'Last run: {now_str}', f'Feeds: {len(feeds_info)} processed, {len(errors)} error(s)']
+    for info in feeds_info:
+        via = ' (via Internet Archive)' if info.get('via_archive') else ''
+        log_lines.append(f'  · {info["title"]} → {info["filename"]} ({info["count"]} item{"s" if info["count"] != 1 else ""}{via})')
+    if errors:
+        log_lines.append('Errors:')
+        for err in errors:
+            log_lines.append(f'  · {err["url"]}: {err["error"]}')
+    with open(os.path.join(repo_root, 'generate-feeds.log'), 'w', encoding='utf-8') as f:
+        f.write('\n'.join(log_lines) + '\n')
+
     if errors:
         print('\nErrors:')
         for err in errors:

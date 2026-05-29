@@ -79,9 +79,9 @@ The Action runs automatically each week, but you can trigger it immediately:
 1. Go to **Actions → Update anonymized feeds**
 2. Click **Run workflow → Run workflow**
 
-The Action will fetch your configured feeds, rewrite their item links, and commit the results to `feeds/` in your repository. GitHub Pages will then redeploy automatically.
+The Action will fetch your configured feeds, rewrite their item links, and commit the results to `feeds/` and a `generate-feeds.log` summary to your repository. GitHub Pages will then redeploy automatically.
 
-### e. Finding Your Feeds
+### e. Locating Your Feeds
 
 After the Action runs:
 
