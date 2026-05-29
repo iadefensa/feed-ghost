@@ -60,6 +60,8 @@ Working with a copy allows you to work on your fork and still pull updates from 
 
 The `schedule` field in your `config.json` is for reference only. The actual schedule is set in `.github/workflows/feeds.yml`—find the `cron:` line and edit it there. The value is a standard cron expression; `0 9 * * 1` means every Monday at 09:00 UTC. Use [crontab.guru](https://crontab.guru/) to build a custom expression.
 
+**Note:** To avoid exhausting your free GitHub Actions minutes, keep the schedule to at most once per day.
+
 ### c. Enable GitHub Pages
 
 1. Go to your fork’s **Settings → Pages**. (If Actions are disabled in your fork, enable them first under
