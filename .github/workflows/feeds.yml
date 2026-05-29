@@ -1,4 +1,4 @@
-name: "Update anonymized feeds"
+name: "Update feeds"
 
 on:
   schedule:
@@ -30,7 +30,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update anonymized feeds [$(date -u '+%Y-%m-%d')]"
+            git commit -m "Update feeds [$(date -u '+%Y-%m-%d')]"
             git pull --rebase
             git push
           fi
