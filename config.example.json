@@ -1,5 +1,4 @@
 {
-  "schedule": "0 9 * * 1",
   "feeds": [
     {
       "url": "https://example.com/feed.xml",

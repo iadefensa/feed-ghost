@@ -2,9 +2,10 @@ name: "Update feeds"
 
 on:
   schedule:
-    # Weekly on Mondays at 09:00 UTC
-    # Reference for changes: https://crontab.guru/
-    - cron: '0 9 * * 1'
+    # Daily at 04:17 UTC (low-traffic window; offset avoids top-of-hour queue spikes)
+    # To use a different schedule, edit the cron expression below
+    # Reference: https://crontab.guru/
+    - cron: '17 4 * * *'
   workflow_dispatch:
 
 permissions:

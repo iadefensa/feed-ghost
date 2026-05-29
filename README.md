@@ -3,7 +3,7 @@
 A dual-purpose feed anonymization tool for browsing and “anonymizing” RSS/Atom feeds via the [Internet Archive](https://web.archive.org/)—useful to avoid subscribing to sites that may excessively track you or otherwise not match your values.
 
 1. [**Interactive feed viewer:**](https://iadefensa.github.io/feed-ghost/) A tool where you enter any feed URL and browse its entries, with each item linked to `web.archive.org` instead of the original site.
-2. **Automated feed anonymization service:** Fork this repo, configure one or more feeds to follow, and a weekly GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your own GitHub Pages site so that you can follow the URLs in your feed reader.
+2. **Automated feed anonymization service:** Fork this repo, configure one or more feeds to follow, and a daily GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your own GitHub Pages site so that you can follow the URLs in your feed reader.
 
 ## 1. Using the Interactive Feed Viewer
 
@@ -32,7 +32,6 @@ Copy `config.example.json` to `config.json` and replace the example entry with y
 
 ```json
 {
-  "schedule": "0 9 * * 1",
   "feeds": [
     {
       "url": "https://example.com/feed.xml",
@@ -58,9 +57,7 @@ Working with a copy allows you to work on your fork and still pull updates from 
 
 **Changing the schedule:**
 
-The `schedule` field in your `config.json` is for reference only. The actual schedule is set in `.github/workflows/feeds.yml`—find the `cron:` line and edit it there. The value is a standard cron expression; `0 9 * * 1` means every Monday at 09:00 UTC. Use [crontab.guru](https://crontab.guru/) to build a custom expression.
-
-**Note:** Avoid running jobs more often than needed. Private repositories and self-hosted or billed runners may consume a quota or incur charges.
+The workflow runs daily by default and it’s recommended to keep the schedule light. To change the schedule, edit the `cron:` line in .github/workflows/feeds.yml. (Tools like [crontab.guru](https://crontab.guru/) can help build a custom expression.)
 
 ### c. Enable GitHub Pages
 
@@ -74,19 +71,19 @@ Your feeds will be available at `https://[your-username].github.io/feed-ghost/fe
 
 ### d. Run the Action for the First Time
 
-The Action runs automatically each week, but you can trigger it immediately:
+The workflow runs automatically each day, but you can trigger it immediately:
 
 1. Go to **Actions → Update feeds**
 2. Click **Run workflow → Run workflow**
 
-The Action will fetch your configured feeds, rewrite their item links, and commit the results to `feeds/` and a `generate-feeds.log` summary to your repository. GitHub Pages will then redeploy automatically.
+The workflow will fetch your configured feeds, rewrite their item links, and commit the results to `feeds/` and a `generate-feeds.log` summary to your repository. GitHub Pages will then redeploy automatically.
 
 ### e. Locating Your Feeds
 
-After the Action runs:
+After the workflow runs:
 
-* `https://[your-username].github.io/feed-ghost/feeds/`—index of all anonymized feeds
-* `https://[your-username].github.io/feed-ghost/feeds/[slug].xml`—individual anonymized feed files, where `[slug]` is derived from the feed’s `name` or title
+* `https://[your-username].github.io/feed-ghost/feeds/`—index of all feeds
+* `https://[your-username].github.io/feed-ghost/feeds/[slug].xml`—individual feeds, where `[slug]` is derived from the feed’s `name` or title
 
 The feed files are valid RSS/Atom XML with item links rewritten to `https://web.archive.org/web/[original URL]`. You can subscribe to the feeds in any feed reader.
 
