@@ -93,14 +93,22 @@ def fetch(url, *, _archive_fallback=True):
     except urllib.error.HTTPError as err:
         if _archive_fallback and err.code in (403, 429):
             print(f'  Direct fetch blocked (HTTP {err.code}); trying Internet Archive fallback…')
-            text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
+            try:
+                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
+            except urllib.error.URLError:
+                print(f'  Internet Archive timed out, retrying…')
+                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
             trigger_save(url)
             return text, True
         raise
     except urllib.error.URLError as err:
         if _archive_fallback:
             print(f'  Direct fetch failed ({err.reason}); trying Internet Archive fallback…')
-            text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
+            try:
+                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
+            except urllib.error.URLError:
+                print(f'  Internet Archive timed out, retrying…')
+                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
             trigger_save(url)
             return text, True
         raise
@@ -304,7 +312,7 @@ def main():
     if errors:
         print('\nErrors:')
         for err in errors:
-            print(f'  {err["url"]}: {err["error"]}', file=sys.stderr)
+            print(f'  {err["url"]}: {err["error"]}')
         if not feeds_info:
             sys.exit(1)
 
