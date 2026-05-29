@@ -1,9 +1,9 @@
 # IA Defensa Feed Ghost
 
-A dual-purpose feed anonymization tool for browsing and “anonymizing” RSS/Atom feeds via the [Internet Archive](https://web.archive.org/)—useful to avoid subscribing to sites that may excessively track you or otherwise not match your values.
+A dual-purpose feed neutralization tool for browsing RSS/Atom feeds and accessing their entries via the [Internet Archive](https://web.archive.org/)—useful to avoid visiting or subscribing to sites that may excessively track you or otherwise not match your values.
 
 1. [**Interactive feed viewer:**](https://iadefensa.github.io/feed-ghost/) A tool where you enter any feed URL and browse its entries, with each item linked to `web.archive.org` instead of the original site.
-2. **Automated feed anonymization service:** Fork this repo, configure one or more feeds to follow, and a daily GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your own GitHub Pages site so that you can follow the URLs in your feed reader.
+2. **Automated feed neutralization service:** Fork this repo, configure one or more feeds to follow, and a daily GitHub Action fetches them, rewrites all item links to `web.archive.org`, and publishes the modified feeds to your own GitHub Pages site so that you can follow the neutralized feeds in your feed reader.
 
 ## 1. Using the Interactive Feed Viewer
 
@@ -11,12 +11,12 @@ Visit [Feed Ghost](https://iadefensa.github.io/feed-ghost/) and paste any RSS or
 
 1. Fetch the feed (with a CORS proxy fallback if needed)
 2. Display all entries with their titles and dates
-3. Link each entry to `https://web.archive.org/web/[original URL]` for anonymous access
+3. Link each entry to `https://web.archive.org/web/[original URL]`
 4. Show a secondary “Save to archive” link (`https://web.archive.org/save/[original URL]`) to trigger archiving of pages not yet captured
 
 No data is stored or transmitted beyond what’s necessary to fetch and display the feed.
 
-## 2. Setting Up Your Own Automated Feed Anonymization Service
+## 2. Setting Up Your Own Automated Feed Neutralization Service
 
 This requires a GitHub account and takes about five minutes.
 
