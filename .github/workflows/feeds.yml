@@ -1,4 +1,4 @@
-name: "Update anonymized feeds"
+name: "Update feeds"
 
 on:
   schedule:
@@ -26,11 +26,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add feeds/
+          if [ -d feeds/ ]; then git add feeds/; fi
+          if [ -f generate-feeds.log ]; then git add generate-feeds.log; fi
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update anonymized feeds [$(date -u '+%Y-%m-%d')]"
+            git commit -m "Update feeds [$(date -u '+%Y-%m-%d')]"
             git pull --rebase
             git push
           fi
