@@ -316,7 +316,12 @@ def main():
     if errors:
         log_lines.append('Errors:')
         for err in errors:
-            log_lines.append(f'  · {err["url"]}: {err["error"]}')
+            parsed = urlparse(err['url'])
+            safe_netloc = parsed.hostname or ''
+            if parsed.port:
+                safe_netloc += f':{parsed.port}'
+            safe_url = parsed._replace(netloc=safe_netloc, query='', fragment='').geturl()
+            log_lines.append(f'  · {safe_url}: {err["error"]}')
     with open(os.path.join(repo_root, 'generate-feeds.log'), 'w', encoding='utf-8') as f:
         f.write('\n'.join(log_lines) + '\n')
 
