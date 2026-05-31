@@ -203,15 +203,15 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
             f'\t\t\t\t\t<li class="entry">'
             + (
                 f'\t\t\t\t\t\t{escape(info["title"])}'
-                ' <span class="text-red-400">was not reachable yet</span>'
+                ' <span class="note-error">was not reachable yet</span>'
                 if info.get('failed')
                 else (
                     f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
                     + f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
                     + (
-                        ' <span class="text-red-400">but currently not reachable</span>'
+                        ' <span class="note-error">but currently not reachable</span>'
                         if info.get('unreachable')
-                        else (' <span class="text-amber-400">but delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
+                        else (' <span class="note-warn">but delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
                     )
                 )
             )
@@ -241,13 +241,12 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
 \t\t\t\tmargin-left: .75rem;
 \t\t\t}}
 
-\t\t\t.entry {{
-\t\t\t\tborder-bottom: 1px solid #333;
-\t\t\t\tpadding: .75rem 0;
+\t\t\t.note-error {{
+\t\t\t\tcolor: #fca5a5;
 \t\t\t}}
 
-\t\t\t.entry:last-child {{
-\t\t\t\tborder-bottom: none;
+\t\t\t.note-warn {{
+\t\t\t\tcolor: #fcd34d;
 \t\t\t}}
 \t\t</style>
 \t</head>

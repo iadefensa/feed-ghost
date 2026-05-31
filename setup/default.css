@@ -54,12 +54,6 @@ a:active {
 	color: #fca5a5;
 }
 
-/* Misc */
-
-p.mt-5 {
-	font-size: 75%;
-}
-
 @media print {
 
 	* {
@@ -68,4 +62,19 @@ p.mt-5 {
 		color: #000 !important;
 	}
 
+}
+
+/* Misc */
+
+p.mt-5 {
+	font-size: 75%;
+}
+
+.entry {
+	border-bottom: 1px solid #333;
+	padding: .875rem 0;
+}
+
+.entry:last-child {
+	border-bottom: 0;
 }
