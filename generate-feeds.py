@@ -51,10 +51,10 @@ def get_config_edit_url(repo_root):
     return None
 
 
-def slugify(text):
-    text = re.sub(r'[^\w\s-]', '', text.lower().strip())
-    slug = re.sub(r'[\s_-]+', '-', text).strip('-')
-    return slug or 'feed'
+def url_slug(url):
+    parsed = urlparse(url)
+    raw = (parsed.netloc + parsed.path).lower()
+    return re.sub(r'[^a-z0-9]+', '-', raw).strip('-') or 'feed'
 
 
 class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
@@ -202,8 +202,12 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
         items_html = '\n'.join(
             f'\t\t\t\t\t<li class="entry">'
             f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
-            f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
-            + (' <span>· delayed (falling back to latest Internet Archive snapshot)</span>' if info.get("via_archive") else '')
+            + f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
+            + (
+                ' <span class="text-amber-400">· currently not reachable</span>'
+                if info.get('unreachable')
+                else (' <span>· delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
+            )
             + '\n\t\t\t\t\t</li>'
             for info in feeds_info
         )
@@ -277,7 +281,6 @@ def main():
     now_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
     feeds_info = []
     errors = []
-    used_slugs = set()
 
     for feed_cfg in feeds:
         url = feed_cfg.get('url', '').strip()
@@ -290,13 +293,7 @@ def main():
             xml_text, via_archive = fetch(url)
             root, feed_title, count = process_feed(xml_text)
             display_name = name_hint or feed_title or urlparse(url).netloc or 'Feed'
-            base = slugify(name_hint or feed_title or urlparse(url).netloc)
-            slug, n = base, 1
-            while slug in used_slugs:
-                n += 1
-                slug = f'{base}-{n}'
-            used_slugs.add(slug)
-            filename = f'{slug}.xml'
+            filename = f'{url_slug(url)}.xml'
             out_path = os.path.join(feeds_dir, filename)
             write_feed(root, out_path)
             feeds_info.append({'title': display_name, 'filename': filename, 'count': count, 'via_archive': via_archive})
@@ -305,14 +302,44 @@ def main():
             print(f'  ERROR: {err}', file=sys.stderr)
             errors.append({'url': url, 'error': str(err)})
 
+    processed_count = len(feeds_info)
+
+    # Include configured feeds that failed but have a cached file in the index,
+    # marked as not reachable
+    failed_urls = {e['url'] for e in errors}
+    for feed_cfg in feeds:
+        url = feed_cfg.get('url', '').strip()
+        if not url or url not in failed_urls:
+            continue
+        filename = f'{url_slug(url)}.xml'
+        path = os.path.join(feeds_dir, filename)
+        if os.path.exists(path):
+            name_hint = feed_cfg.get('name', '').strip()
+            cached_title, cached_count = None, 0
+            try:
+                with open(path, encoding='utf-8') as f:
+                    cached_xml = f.read()
+                _, cached_title, cached_count = process_feed(cached_xml)
+            except Exception:
+                pass
+            feeds_info.append({
+                'title': name_hint or cached_title or urlparse(url).netloc or 'Feed',
+                'filename': filename,
+                'count': cached_count,
+                'unreachable': True,
+            })
+
     config_edit_url = get_config_edit_url(repo_root)
     generate_index(feeds_info, os.path.join(feeds_dir, 'index.html'), now_str, config_edit_url)
-    print(f'\nDone. {len(feeds_info)} feed(s) processed, {len(errors)} error(s).')
+    print(f'\nDone. {processed_count} feed(s) processed, {len(errors)} error(s).')
 
-    log_lines = [f'Last run: {now_str}', f'Feeds: {len(feeds_info)} processed, {len(errors)} error(s)']
+    log_lines = [f'Last run: {now_str}', f'Feeds: {processed_count} processed, {len(errors)} error(s)']
     for info in feeds_info:
-        via = ' (via Internet Archive)' if info.get('via_archive') else ''
-        log_lines.append(f'  · {info["title"]} → {info["filename"]} ({info["count"]} item{"s" if info["count"] != 1 else ""}{via})')
+        if info.get('unreachable'):
+            log_lines.append(f'  · {info["title"]} → {info["filename"]} (not reachable, showing cached file)')
+        else:
+            via = ' (via Internet Archive)' if info.get('via_archive') else ''
+            log_lines.append(f'  · {info["title"]} → {info["filename"]} ({info["count"]} item{"s" if info["count"] != 1 else ""}{via})')
     if errors:
         log_lines.append('Errors:')
         for err in errors:
@@ -325,6 +352,23 @@ def main():
                 safe_netloc += f':{parsed.port}'
             safe_url = parsed._replace(netloc=safe_netloc, query='', fragment='').geturl()
             log_lines.append(f'  · {safe_url}: {err["error"]}')
+    # Delete feed files not corresponding to any currently configured URL;
+    # since filenames are derived from URLs, configured-but-failing feeds are
+    # protected automatically—heir expected filename is known without fetching
+    config_filenames = {
+        f'{url_slug(fc.get("url", "").strip())}.xml'
+        for fc in feeds if fc.get('url', '').strip()
+    }
+    deleted = []
+    if os.path.isdir(feeds_dir):
+        for fname in sorted(os.listdir(feeds_dir)):
+            if fname.endswith('.xml') and fname not in config_filenames:
+                os.remove(os.path.join(feeds_dir, fname))
+                deleted.append(fname)
+    if deleted:
+        print(f'\nDeleted {len(deleted)} stale feed file(s): {", ".join(deleted)}')
+        log_lines.append(f'Deleted: {", ".join(deleted)}')
+
     with open(os.path.join(repo_root, 'generate-feeds.log'), 'w', encoding='utf-8') as f:
         f.write('\n'.join(log_lines) + '\n')
 
@@ -332,7 +376,7 @@ def main():
         print('\nErrors:')
         for err in errors:
             print(f'  {err["url"]}: {err["error"]}')
-        if not feeds_info:
+        if not processed_count:
             sys.exit(1)
 
 
