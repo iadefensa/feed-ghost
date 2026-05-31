@@ -53,7 +53,7 @@ def get_config_edit_url(repo_root):
 
 def url_slug(url):
     parsed = urlparse(url)
-    raw = (parsed.netloc + parsed.path).lower()
+    raw = (parsed.netloc + parsed.path + ('?' + parsed.query if parsed.query else '')).lower()
     return re.sub(r'[^a-z0-9]+', '-', raw).strip('-') or 'feed'
 
 
@@ -369,7 +369,7 @@ def main():
             log_lines.append(f'  · {safe_url}: {err["error"]}')
     # Delete feed files not corresponding to any currently configured URL;
     # since filenames are derived from URLs, configured-but-failing feeds are
-    # protected automatically—heir expected filename is known without fetching
+    # protected automatically—their expected filename is known without fetching
     config_filenames = {
         f'{url_slug(fc.get("url", "").strip())}.xml'
         for fc in feeds if fc.get('url', '').strip()
@@ -391,7 +391,7 @@ def main():
         print('\nErrors:')
         for err in errors:
             print(f'  {err["url"]}: {err["error"]}')
-        if not processed_count:
+        if not feeds_info:
             sys.exit(1)
 
 
