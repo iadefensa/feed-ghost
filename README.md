@@ -81,7 +81,7 @@ The workflow will fetch your configured feeds, rewrite their item links, and com
 After the workflow runs:
 
 * `https://[your-username].github.io/feed-ghost/feeds/`—index of all feeds
-* `https://[your-username].github.io/feed-ghost/feeds/[slug].xml`—individual feeds, where `[slug]` is derived from the feed’s `name` or title
+* `https://[your-username].github.io/feed-ghost/feeds/[slug].xml`—individual feeds, where `[slug]` is derived from the feed URL
 
 The feed files are valid RSS/Atom XML with item links rewritten to `https://web.archive.org/web/[original URL]`. You can subscribe to the feeds in any feed reader.
 
