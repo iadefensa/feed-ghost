@@ -178,6 +178,9 @@ def process_feed(xml_text):
         raise ValueError(f'Invalid XML: {err}') from err
 
     tag = root.tag
+    local_tag = tag.split('}')[-1].lower() if '}' in tag else tag.lower()
+    if local_tag == 'html':
+        raise ValueError('Received an HTML page instead of a feed (server may have returned an error or redirect page)')
     if tag == f'{{{NS_ATOM}}}feed' or tag == 'feed':
         feed_title, count = process_atom(root)
         return root, feed_title, count
