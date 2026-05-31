@@ -326,8 +326,8 @@ def main():
                 with open(path, encoding='utf-8') as f:
                     cached_xml = f.read()
                 _, cached_title, cached_count = process_feed(cached_xml)
-            except Exception:
-                pass
+            except Exception as err:
+                print(f'  Warning: failed to read cached feed {path}: {err}', file=sys.stderr)
             feeds_info.append({
                 'title': name_hint or cached_title or urlparse(url).netloc or 'Feed',
                 'filename': filename,
