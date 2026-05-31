@@ -201,12 +201,19 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
     if feeds_info:
         items_html = '\n'.join(
             f'\t\t\t\t\t<li class="entry">'
-            f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
-            + f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
             + (
-                ' <span class="text-red-400">but original feed currently not reachable</span>'
-                if info.get('unreachable')
-                else (' <span class="text-amber-400">but delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
+                f'\t\t\t\t\t\t{escape(info["title"])}'
+                ' <span class="text-red-400">was not reachable yet</span>'
+                if info.get('failed')
+                else (
+                    f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
+                    + f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
+                    + (
+                        ' <span class="text-red-400">but currently not reachable</span>'
+                        if info.get('unreachable')
+                        else (' <span class="text-amber-400">but delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
+                    )
+                )
             )
             + '\n\t\t\t\t\t</li>'
             for info in feeds_info
@@ -304,17 +311,16 @@ def main():
 
     processed_count = len(feeds_info)
 
-    # Include configured feeds that failed but have a cached file in the index,
-    # marked as not reachable
+    # Include failed feeds in the index: with a cached file (unreachable) or without (failed).
     failed_urls = {e['url'] for e in errors}
     for feed_cfg in feeds:
         url = feed_cfg.get('url', '').strip()
         if not url or url not in failed_urls:
             continue
+        name_hint = feed_cfg.get('name', '').strip()
         filename = f'{url_slug(url)}.xml'
         path = os.path.join(feeds_dir, filename)
         if os.path.exists(path):
-            name_hint = feed_cfg.get('name', '').strip()
             cached_title, cached_count = None, 0
             try:
                 with open(path, encoding='utf-8') as f:
@@ -328,6 +334,13 @@ def main():
                 'count': cached_count,
                 'unreachable': True,
             })
+        else:
+            feeds_info.append({
+                'title': name_hint or urlparse(url).netloc or 'Feed',
+                'failed': True,
+            })
+
+    feeds_info.sort(key=lambda x: x['title'].lower())
 
     config_edit_url = get_config_edit_url(repo_root)
     generate_index(feeds_info, os.path.join(feeds_dir, 'index.html'), now_str, config_edit_url)
@@ -335,7 +348,9 @@ def main():
 
     log_lines = [f'Last run: {now_str}', f'Feeds: {processed_count} processed, {len(errors)} error(s)']
     for info in feeds_info:
-        if info.get('unreachable'):
+        if info.get('failed'):
+            log_lines.append(f'  · {info["title"]} (could not be generated)')
+        elif info.get('unreachable'):
             log_lines.append(f'  · {info["title"]} → {info["filename"]} (not reachable, showing cached file)')
         else:
             via = ' (via Internet Archive)' if info.get('via_archive') else ''
