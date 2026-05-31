@@ -204,9 +204,9 @@ def generate_index(feeds_info, out_path, now_str, config_edit_url=None):
             f'\t\t\t\t\t\t<a href="{escape(info["filename"])}" target="_blank">{escape(info["title"])}</a>'
             + f' <span>{info["count"]} item{"s" if info["count"] != 1 else ""}</span>'
             + (
-                ' <span class="text-amber-400">· currently not reachable</span>'
+                ' <span class="text-red-400">but original feed currently not reachable</span>'
                 if info.get('unreachable')
-                else (' <span>· delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
+                else (' <span class="text-amber-400">but delayed (falling back to latest Internet Archive snapshot)</span>' if info.get('via_archive') else '')
             )
             + '\n\t\t\t\t\t</li>'
             for info in feeds_info
