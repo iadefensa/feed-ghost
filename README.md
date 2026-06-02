@@ -1,4 +1,4 @@
-# IA Defensa Feed Ghost
+# IA Defensa Feed Ghost (Beta)
 
 A dual-purpose feed neutralization tool for browsing RSS/Atom feeds and accessing their entries via the [Internet Archive](https://web.archive.org/), to avoid visiting or subscribing to sites that may excessively track you or otherwise not match your values.
 
