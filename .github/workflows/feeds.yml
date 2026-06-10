@@ -5,7 +5,7 @@ on:
     # Daily at 04:17 UTC (low-traffic window; offset avoids top-of-hour queue spikes)
     # To use a different schedule, edit the cron expression below
     # Reference: https://crontab.guru/
-    - cron: '17 4 * * *'
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: "Install dependencies"
         run: pip install -r requirements.txt
       - name: "Generate feeds"
