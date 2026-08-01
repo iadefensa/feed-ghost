@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 # Prevent a manual run from racing a scheduled one
 concurrency:
@@ -18,6 +18,8 @@ concurrency:
 jobs:
   update-feeds:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
