@@ -3,13 +3,17 @@ name: "Update feeds"
 on:
   schedule:
     # Daily at 04:17 UTC (low-traffic window; offset avoids top-of-hour queue spikes)
-    # To use a different schedule, edit the cron expression below
-    # Reference: https://crontab.guru/
+    # https://crontab.guru/
     - cron: "17 4 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+# Prevent a manual run from racing a scheduled one
+concurrency:
+  group: update-feeds
+  cancel-in-progress: false
 
 jobs:
   update-feeds:
@@ -23,6 +27,14 @@ jobs:
         run: pip install -r requirements.txt
       - name: "Generate feeds"
         run: python generate-feeds.py
+      - name: "Validate feeds"
+        run: |
+          python - <<'EOF'
+          import glob
+          import xml.etree.ElementTree as ET
+          for file in glob.glob("feeds/*.xml"):
+              ET.parse(file)
+          EOF
       - name: "Commit changes"
         run: |
           git config user.name "github-actions[bot]"
