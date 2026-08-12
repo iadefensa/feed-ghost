@@ -18,13 +18,13 @@ No data is stored or transmitted beyond what’s necessary to fetch and display 
 
 ## 2. Setting Up Your Own Automated Feed Neutralization Service
 
-**Privacy note:** GitHub Pages is free only for public repositories. If your fork is public, your `config.json` and the list of feeds you follow will be publicly visible. Keep this in mind before adding feeds you’d prefer not to disclose.
+**Privacy note:** GitHub Pages is free only for public repositories. If your fork is public, your config.json and the list of feeds you follow will be publicly visible. Keep this in mind before adding feeds you’d prefer not to disclose.
 
 ### a. Fork This Repository
 
 Click **Fork** on the GitHub repository page. All subsequent steps happen in your fork.
 
-### b. Create and Edit `config.json`
+### b. Create and Edit config.json
 
 Copy config.example.json to config.json and replace the example entry with your feeds:
 
