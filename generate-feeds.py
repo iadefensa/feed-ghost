@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
@@ -21,6 +22,13 @@ from urllib.parse import urlparse
 
 ARCHIVE_WEB = 'https://web.archive.org/web/'
 ARCHIVE_SAVE = 'https://web.archive.org/save/'
+ARCHIVE_INTERVAL = 5
+ARCHIVE_TIMEOUT = 60
+ARCHIVE_ATTEMPTS = 3
+ARCHIVE_BACKOFF = 30
+ARCHIVE_BACKOFF_MAX = 120
+
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
 
 NS_ATOM = 'http://www.w3.org/2005/Atom'
 NS_CONTENT = 'http://purl.org/rss/1.0/modules/content/'
@@ -33,6 +41,8 @@ ET.register_namespace('content', NS_CONTENT)
 ET.register_namespace('dc', NS_DC)
 ET.register_namespace('media', NS_MEDIA)
 ET.register_namespace('sy', NS_SY)
+
+_archive_last_request = float('-inf')
 
 
 def get_config_edit_url(repo_root):
@@ -53,7 +63,7 @@ def get_config_edit_url(repo_root):
 
 def url_slug(url):
     parsed = urlparse(url)
-    raw = (parsed.netloc + parsed.path + ('?' + parsed.query if parsed.query else '')).lower()
+    raw = (parsed.netloc.rpartition('@')[2] + parsed.path + ('?' + parsed.query if parsed.query else '')).lower()
     return re.sub(r'[^a-z0-9]+', '-', raw).strip('-') or 'feed'
 
 
@@ -64,59 +74,82 @@ class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def archive_wait():
+    """Space out Internet Archive requests, which get throttled or refused when sent in quick succession"""
+    global _archive_last_request
+    delay = _archive_last_request + ARCHIVE_INTERVAL - time.monotonic()
+    if delay > 0:
+        time.sleep(delay)
+    _archive_last_request = time.monotonic()
+
+
 def trigger_save(url):
     """Request a new Internet Archive snapshot of url (fire-and-forget)."""
-    req = urllib.request.Request(
-        f'{ARCHIVE_SAVE}{url}',
-        headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'},
-    )
+    archive_wait()
+    req = urllib.request.Request(f'{ARCHIVE_SAVE}{url}', headers={'User-Agent': USER_AGENT})
     try:
         with urllib.request.urlopen(req, timeout=15):
             pass
-        print(f'  Triggered Internet Archive re-archive for {url}')
+        print(f'Triggered Internet Archive re-archive for {url}')
     except Exception as save_err:
-        print(f'  Could not trigger Internet Archive save: {save_err}')
+        print(f'Could not trigger Internet Archive save for {url}: {save_err}')
 
 
-def fetch(url, *, _archive_fallback=True):
+def fetch_text(url, timeout):
     req = urllib.request.Request(
         url,
         headers={
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+            'User-Agent': USER_AGENT,
             'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
         },
     )
     opener = urllib.request.build_opener(_SafeRedirectHandler)
+    with opener.open(req, timeout=timeout) as resp:
+        raw = resp.read()
     try:
-        with opener.open(req, timeout=30) as resp:
-            raw = resp.read()
-    except urllib.error.HTTPError as err:
-        if _archive_fallback and err.code in (403, 429):
-            print(f'  Direct fetch blocked (HTTP {err.code}); trying Internet Archive fallback…')
-            try:
-                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
-            except urllib.error.URLError:
-                print(f'  Internet Archive timed out, retrying…')
-                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
-            trigger_save(url)
-            return text, True
-        raise
-    except urllib.error.URLError as err:
-        if _archive_fallback:
-            print(f'  Direct fetch failed ({err.reason}); trying Internet Archive fallback…')
-            try:
-                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
-            except urllib.error.URLError:
-                print(f'  Internet Archive timed out, retrying…')
-                text, _ = fetch(ARCHIVE_WEB + url, _archive_fallback=False)
-            trigger_save(url)
-            return text, True
-        raise
-    try:
-        text = raw.decode('utf-8')
+        return raw.decode('utf-8')
     except UnicodeDecodeError:
-        text = raw.decode('latin-1', errors='replace')
-    return text, False
+        return raw.decode('latin-1', errors='replace')
+
+
+def fetch_archive(url):
+    """Fetch the latest Internet Archive snapshot of url, backing off on throttling and network errors"""
+    for attempt in range(1, ARCHIVE_ATTEMPTS + 1):
+        archive_wait()
+        try:
+            return fetch_text(ARCHIVE_WEB + url, ARCHIVE_TIMEOUT)
+        except urllib.error.HTTPError as err:
+            if (err.code != 429 and err.code < 500) or attempt == ARCHIVE_ATTEMPTS:
+                raise
+            delay = ARCHIVE_BACKOFF * attempt
+            retry_after = err.headers.get('Retry-After', '')
+            if retry_after.isdigit():
+                delay = max(delay, min(int(retry_after), ARCHIVE_BACKOFF_MAX))
+            reason = f'HTTP {err.code}'
+        except OSError as err:
+            if attempt == ARCHIVE_ATTEMPTS:
+                raise
+            delay = ARCHIVE_BACKOFF * attempt
+            reason = getattr(err, 'reason', err)
+        print(f'  Internet Archive request failed ({reason}); retrying in {delay} s…')
+        time.sleep(delay)
+
+
+def fetch(url):
+    """Fetch url, falling back to the Internet Archive; returns (text, via_archive)"""
+    try:
+        return fetch_text(url, 30), False
+    except urllib.error.HTTPError as err:
+        if err.code not in (403, 429):
+            raise
+        reason = f'HTTP {err.code}'
+    except OSError as err:
+        reason = getattr(err, 'reason', err)
+    print(f'  Direct fetch failed ({reason}); trying Internet Archive fallback…')
+    try:
+        return fetch_archive(url), True
+    except OSError as err:
+        raise RuntimeError(f'Direct fetch failed ({reason}), and so did the Internet Archive fallback ({err})') from err
 
 
 def archive(url):
@@ -290,6 +323,7 @@ def main():
     now_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
     feeds_info = []
     errors = []
+    archive_saves = []
 
     for feed_cfg in feeds:
         url = feed_cfg.get('url', '').strip()
@@ -301,15 +335,23 @@ def main():
         try:
             xml_text, via_archive = fetch(url)
             root, feed_title, count = process_feed(xml_text)
-            display_name = name_hint or feed_title or urlparse(url).netloc or 'Feed'
+            display_name = name_hint or feed_title or urlparse(url).hostname or 'Feed'
             filename = f'{url_slug(url)}.xml'
             out_path = os.path.join(feeds_dir, filename)
             write_feed(root, out_path)
             feeds_info.append({'title': display_name, 'filename': filename, 'count': count, 'via_archive': via_archive})
+            if via_archive:
+                archive_saves.append(url)
             print(f'  → feeds/{filename} ({count} item{"s" if count != 1 else ""})')
         except Exception as err:
             print(f'  ERROR: {err}', file=sys.stderr)
             errors.append({'url': url, 'error': str(err)})
+
+    # Saves come last so they cannot eat into the Internet Archive’s rate limit for fetches
+    if archive_saves:
+        print()
+    for url in archive_saves:
+        trigger_save(url)
 
     processed_count = len(feeds_info)
 
@@ -331,14 +373,14 @@ def main():
             except Exception as err:
                 print(f'  Warning: failed to read cached feed {path}: {err}', file=sys.stderr)
             feeds_info.append({
-                'title': name_hint or cached_title or urlparse(url).netloc or 'Feed',
+                'title': name_hint or cached_title or urlparse(url).hostname or 'Feed',
                 'filename': filename,
                 'count': cached_count,
                 'unreachable': True,
             })
         else:
             feeds_info.append({
-                'title': name_hint or urlparse(url).netloc or 'Feed',
+                'title': name_hint or urlparse(url).hostname or 'Feed',
                 'failed': True,
             })
 
@@ -393,7 +435,7 @@ def main():
         print('\nErrors:')
         for err in errors:
             print(f'  {err["url"]}: {err["error"]}')
-        if not feeds_info:
+        if not processed_count:
             sys.exit(1)
 
 
