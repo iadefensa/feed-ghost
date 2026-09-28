@@ -4,9 +4,11 @@ import json
 import os
 import shutil
 import tempfile
+import time
 import unittest
 import urllib.error
 from contextlib import redirect_stderr, redirect_stdout
+from email.utils import formatdate
 from unittest import mock
 
 DIR_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -184,12 +186,23 @@ class TestFetch(QuietTestCase):
         self.assertEqual(backoffs, [self.fg.ARCHIVE_BACKOFF, self.fg.ARCHIVE_BACKOFF * 2])
 
     def test_archive_honors_retry_after(self):
-        for retry_after, expected in (('90', 90), ('3600', self.fg.ARCHIVE_BACKOFF_MAX), ('soon', self.fg.ARCHIVE_BACKOFF)):
+        in_90_s = formatdate(time.time() + 90, usegmt=True)
+        cases = (('90', 90), (in_90_s, 90), ('Mon, 01 Jan 2024 00:00:00 GMT', self.fg.ARCHIVE_BACKOFF), ('soon', self.fg.ARCHIVE_BACKOFF))
+        for retry_after, expected in cases:
             with self.subTest(retry_after=retry_after):
                 self.sleeps.clear()
                 self.fake_fetch_text(http_error(403), [http_error(429, {'Retry-After': retry_after}), '<rss/>'])
                 self.fg.fetch('https://example.com/feed')
-                self.assertIn(expected, self.sleeps)
+                # Allow for the clock ticking between formatting and parsing the date
+                self.assertTrue(any(expected - 1 <= delay <= expected for delay in self.sleeps), self.sleeps)
+
+    def test_archive_gives_up_when_retry_after_too_long(self):
+        for retry_after in (str(self.fg.ARCHIVE_BACKOFF_MAX + 1), formatdate(time.time() + 3600, usegmt=True)):
+            with self.subTest(retry_after=retry_after):
+                self.fake_fetch_text(http_error(403), [http_error(429, {'Retry-After': retry_after})])
+                with self.assertRaisesRegex(RuntimeError, 'HTTP Error 429'):
+                    self.fg.fetch('https://example.com/feed')
+                self.assertEqual(len(self.requests), 2)
 
     def test_archive_no_retry_when_missing(self):
         self.fake_fetch_text(http_error(403), [http_error(404)])

@@ -6,6 +6,7 @@ web.archive.org, and writes output feed files to feeds/.
 """
 
 import json
+import math
 import os
 import re
 import subprocess
@@ -17,6 +18,7 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as safe_ET
 from defusedxml import DefusedXmlException
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from html import escape
 from urllib.parse import urlparse
 
@@ -112,6 +114,20 @@ def fetch_text(url, timeout):
         return raw.decode('latin-1', errors='replace')
 
 
+def parse_retry_after(value):
+    """Seconds requested by a `Retry-After` header (delay or HTTP date), or `None` if missing or invalid"""
+    value = (value or '').strip()
+    if value.isdigit():
+        return int(value)
+    try:
+        date = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if date.tzinfo is None:
+        date = date.replace(tzinfo=timezone.utc)
+    return max(0, math.ceil((date - datetime.now(timezone.utc)).total_seconds()))
+
+
 def fetch_archive(url):
     """Fetch the latest Internet Archive snapshot of url, backing off on throttling and network errors"""
     for attempt in range(1, ARCHIVE_ATTEMPTS + 1):
@@ -122,9 +138,12 @@ def fetch_archive(url):
             if (err.code != 429 and err.code < 500) or attempt == ARCHIVE_ATTEMPTS:
                 raise
             delay = ARCHIVE_BACKOFF * attempt
-            retry_after = err.headers.get('Retry-After', '')
-            if retry_after.isdigit():
-                delay = max(delay, min(int(retry_after), ARCHIVE_BACKOFF_MAX))
+            retry_after = parse_retry_after(err.headers.get('Retry-After'))
+            if retry_after is not None:
+                # Retrying sooner than requested is futile, waiting longer would hold up the run
+                if retry_after > ARCHIVE_BACKOFF_MAX:
+                    raise
+                delay = max(delay, retry_after)
             reason = f'HTTP {err.code}'
         except OSError as err:
             if attempt == ARCHIVE_ATTEMPTS:
