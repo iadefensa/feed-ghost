@@ -91,3 +91,15 @@ The feed files are valid RSS/Atom XML with item links rewritten to `https://web.
 * **Archive availability:** Not all URLs may have an archived copy on `web.archive.org`. The “Save to archive” link and prefixed links will open whatever the Internet Archive has—or its “Save Page Now” interface if nothing is captured yet.
 * **CORS:** Most feed servers do not send CORS headers, so the viewer automatically retries via [corsproxy.io](https://corsproxy.io/) when a direct fetch fails. When the proxy is used, your request—including your IP address and browser metadata—is sent to corsproxy.io along with the feed URL.
 * **Private feeds:** Feeds behind authentication are not supported.
+
+## Working on Feed Ghost
+
+Note: This section assumes working with dependencies installed (`pip install -r requirements.txt`).
+
+### Tests
+
+```shell
+python3 -m unittest discover -s test
+```
+
+Runs test/test_generate_feeds.py, which covers generate-feeds.py without network access: feed processing and link rewriting, fetching with the Internet Archive fallback (retries, backoff, request spacing), and full runs of the script from a temporary copy (output files, log, cached and stale feeds).
