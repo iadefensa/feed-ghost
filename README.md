@@ -12,7 +12,7 @@ Visit [Feed Ghost](https://iadefensa.github.io/feed-ghost/) and paste any RSS or
 1. fetch the feed (with a CORS proxy fallback if needed),
 2. display all entries with their titles and dates,
 3. link each entry to `https://web.archive.org/web/[original URL]`, and
-4. provide a secondary “Save to archive” link (`https://web.archive.org/save/[original URL]`) to trigger archiving of pages not yet captured.
+4. provide a secondary _Save to archive_ link (`https://web.archive.org/save/[original URL]`) to trigger archiving of pages not yet captured.
 
 No data is stored or transmitted beyond what’s necessary to fetch and display the feed.
 
@@ -22,7 +22,7 @@ No data is stored or transmitted beyond what’s necessary to fetch and display 
 
 ### a. Fork This Repository
 
-Click **Fork** on the GitHub repository page. All subsequent steps happen in your fork.
+Click _Fork_ on the GitHub repository page. All subsequent steps happen in your fork.
 
 ### b. Create and Edit config.json
 
@@ -59,11 +59,11 @@ The workflow runs daily by default and it’s recommended to keep the schedule l
 
 ### c. Enable GitHub Pages
 
-1. Go to your fork’s **Settings → Pages**. (If Actions are disabled in your fork, enable them first under
-**Actions → Enable**.)
-2. Under **Source**, select **Deploy from a branch**.
+1. Go to your fork’s _Settings_ → _Pages_. (If Actions are disabled in your fork, enable them first under
+_Actions_ → _Enable_.)
+2. Under _Source_, select _Deploy from a branch_.
 3. Choose branch: `main`, folder: `/ (root)`.
-4. Click **Save**.
+4. Click _Save_.
 
 Your feeds will be available at `https://[your-username].github.io/feed-ghost/feeds/`.
 
@@ -71,8 +71,8 @@ Your feeds will be available at `https://[your-username].github.io/feed-ghost/fe
 
 The workflow runs automatically each day, but you can trigger it immediately:
 
-1. Go to **Actions → Update feeds**
-2. Click **Run workflow → Run workflow**
+1. Go to _Actions_ → _Update feeds_
+2. Click _Run workflow_ → _Run workflow_
 
 The workflow will fetch your configured feeds, rewrite their item links, and commit the results to the “feeds” directory as well as a generate-feeds.log summary to your repository. GitHub Pages will then redeploy automatically.
 
@@ -88,7 +88,7 @@ The feed files are valid RSS/Atom XML with item links rewritten to `https://web.
 ## Notes
 
 * **Feed format support:** RSS 2.0 and Atom are supported. Older RSS 0.9x variants may work, but other formats (RSS 1.0, JSON Feed) do not.
-* **Archive availability:** Not all URLs may have an archived copy on `web.archive.org`. The “Save to archive” link and prefixed links will open whatever the Internet Archive has—or its “Save Page Now” interface if nothing is captured yet.
+* **Archive availability:** Not all URLs may have an archived copy on `web.archive.org`. The _Save to archive_ link and prefixed links will open whatever the Internet Archive has—or its “Save Page Now” interface if nothing is captured yet.
 * **CORS:** Most feed servers do not send CORS headers, so the viewer automatically retries via [corsproxy.io](https://corsproxy.io/) when a direct fetch fails. When the proxy is used, your request—including your IP address and browser metadata—is sent to corsproxy.io along with the feed URL.
 * **Private feeds:** Feeds behind authentication are not supported.
 
