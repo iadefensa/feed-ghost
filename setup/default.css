@@ -2,8 +2,7 @@ h1,
 h2,
 h3,
 h4,
-a,
-strong {
+a {
 	color: #fff;
 	font-weight: 400;
 }
@@ -25,6 +24,10 @@ a:focus,
 a:hover,
 a:active {
 	text-decoration: none;
+}
+
+strong {
+	font-weight: 500;
 }
 
 /* Buttons */
