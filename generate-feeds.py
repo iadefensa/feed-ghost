@@ -30,7 +30,7 @@ ARCHIVE_ATTEMPTS = 3
 ARCHIVE_BACKOFF = 30
 ARCHIVE_BACKOFF_MAX = 120
 
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36'
 
 NS_ATOM = 'http://www.w3.org/2005/Atom'
 NS_CONTENT = 'http://purl.org/rss/1.0/modules/content/'
